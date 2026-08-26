@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buah-buahan — Latihan Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #2B2115;
+    --paper: #FBF6EA;
+    --paper-line: #ECDFC0;
+    --ink: #2E2418;
+    --ink-soft: #6B5D48;
+    --margin-rule: #C9553F;
+    --gold: #E0A526;
+    --correct: #4C8F63;
+    --correct-bg: #E7F1E4;
+    --wrong: #C9553F;
+    --wrong-bg: #F7E7E1;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(224,165,38,0.14), transparent 45%),
+      radial-gradient(circle at 88% 92%, rgba(76,143,99,0.14), transparent 50%);
+    font-family: 'Work Sans', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .stage { max-width: 720px; margin: 0 auto; padding: 40px 18px 60px; }
+  .masthead { text-align: center; color: var(--paper); margin-bottom: 22px; }
+  .masthead .eyebrow {
+    font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 8px;
+  }
+  .masthead h1 {
+    font-family: 'Fraunces', serif; font-weight: 700;
+    font-size: clamp(28px, 6vw, 40px); margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  .masthead p { margin: 0; color: rgba(251,246,234,0.72); font-size: 14.5px; }
+
+  .page {
+    position: relative;
+    background: var(--paper);
+    border-radius: 10px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35), 0 2px 0 rgba(255,255,255,0.03) inset;
+    padding: 34px 30px 30px 56px;
+    overflow: hidden;
+  }
+  .page::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 34px;
+    width: 1.5px; background: var(--margin-rule); opacity: 0.55;
+  }
+  .page::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 37px, var(--paper-line) 38px);
+    opacity: 0.55; pointer-events: none;
+  }
+
+  .progress-row { position: relative; display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .progress-track { flex: 1; height: 8px; border-radius: 5px; background: rgba(46,36,24,0.10); overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--correct)); width: 0%; transition: width 0.4s ease; }
+  .progress-count { font-size: 13px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  .q-tag {
+    position: relative; display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--margin-rule); margin-bottom: 10px;
+  }
+  .q-tag .num-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--margin-rule); color: var(--paper);
+    font-family: 'Fraunces', serif; font-size: 13px; font-weight: 700;
+  }
+
+  .sentence {
+    position: relative; font-family: 'Fraunces', serif;
+    font-size: clamp(21px, 4.2vw, 26px); font-weight: 600; line-height: 1.5;
+    margin: 0 0 22px; color: var(--ink);
+  }
+  .emoji-visual { font-size: 44px; margin: 0 0 14px; }
+
+  .options { position: relative; display: grid; gap: 10px; margin-bottom: 18px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    padding: 13px 16px; border-radius: 9px; border: 1.5px solid rgba(46,36,24,0.14);
+    background: #fff; font-family: 'Work Sans', sans-serif; font-size: 15.5px; font-weight: 500;
+    color: var(--ink); cursor: pointer; transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--gold); transform: translateY(-1px); }
+  .opt:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+  .opt .letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(46,36,24,0.25);
+    font-size: 12.5px; font-weight: 700; flex-shrink: 0; color: var(--ink-soft);
+  }
+  .opt:disabled { cursor: default; }
+  .opt.correct-pick { border-color: var(--correct); background: var(--correct-bg); }
+  .opt.correct-pick .letter { border-color: var(--correct); color: var(--correct); background: #fff; }
+  .opt.wrong-pick { border-color: var(--wrong); background: var(--wrong-bg); }
+  .opt.wrong-pick .letter { border-color: var(--wrong); color: var(--wrong); background: #fff; }
+  .opt.reveal-correct { border-color: var(--correct); }
+  .opt.dim { opacity: 0.55; }
+
+  .feedback {
+    position: relative; border-radius: 9px; padding: 14px 16px; font-size: 14.5px;
+    line-height: 1.55; margin-bottom: 20px; display: none; animation: slide-in 0.25s ease;
+  }
+  @keyframes slide-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .feedback.show { display: block; }
+  .feedback.tone-correct { background: var(--correct-bg); border: 1.5px solid rgba(76,143,99,0.35); }
+  .feedback.tone-wrong { background: var(--wrong-bg); border: 1.5px solid rgba(201,85,63,0.3); }
+  .feedback strong { font-weight: 700; }
+
+  .actions { position: relative; display: flex; justify-content: flex-end; }
+  .next-btn {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--ink); color: var(--paper);
+    border: none; border-radius: 999px; padding: 11px 22px; font-family: 'Work Sans', sans-serif;
+    font-size: 14.5px; font-weight: 600; cursor: pointer; opacity: 0; pointer-events: none;
+    transform: translateY(4px); transition: opacity 0.2s ease, transform 0.2s ease, background 0.15s ease;
+  }
+  .next-btn.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .next-btn:hover { background: #4a3a25; }
+
+  .results { position: relative; text-align: center; padding: 10px 0 4px; }
+  .results .big-emoji { font-size: 52px; margin-bottom: 6px; }
+  .results h2 { font-family: 'Fraunces', serif; font-size: 26px; margin: 0 0 8px; }
+  .results p.score-line { font-size: 15.5px; color: var(--ink-soft); margin: 0 0 22px; }
+  .results p.score-line b { color: var(--ink); font-size: 19px; }
+  .review-list { text-align: left; display: grid; gap: 8px; margin-bottom: 24px; }
+  .review-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; padding: 9px 12px; border-radius: 7px; background: rgba(46,36,24,0.04); }
+  .review-item .mark { flex-shrink: 0; }
+  .restart-btn {
+    background: var(--gold); color: var(--ink); border: none; border-radius: 999px;
+    padding: 12px 26px; font-family: 'Work Sans', sans-serif; font-size: 14.5px; font-weight: 700;
+    cursor: pointer; transition: transform 0.1s ease, background 0.15s ease;
+  }
+  .restart-btn:hover { transform: translateY(-1px); background: #c8930f; }
+
+  .footnote { text-align: center; color: rgba(251,246,234,0.45); font-size: 12px; margin-top: 22px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="masthead">
+    <div class="eyebrow">Lembaran Kerja Bahasa Melayu</div>
+    <h1>Buah-buahan</h1>
+    <p>Pilih jawapan yang betul untuk setiap soalan tentang buah-buahan.</p>
+  </div>
+
+  <div class="page" id="page">
+    <div id="quizView">
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-count" id="progressCount">Soalan 1 / 10</div>
+      </div>
+
+      <div class="q-tag"><span class="num-badge" id="qNumBadge">1</span> Soalan</div>
+      <div class="emoji-visual" id="visualEl"></div>
+      <p class="sentence" id="sentenceEl"></p>
+
+      <div class="options" id="optionsEl"></div>
+      <div class="feedback" id="feedbackEl"></div>
+
+      <div class="actions">
+        <button class="next-btn" id="nextBtn">Soalan seterusnya →</button>
+      </div>
+    </div>
+
+    <div id="resultsView" style="display:none;"></div>
+  </div>
+
+  <div class="footnote">Tajuk: Buah-buahan · Latihan 10 soalan</div>
+</div>
+
+<script>
+const LETTERS = ['A','B','C','D'];
+
+const questions = [
+  {
+    visual: "🍎",
+    text: "Apakah nama buah ini?",
+    options: ["Pisang", "Epal", "Mangga", "Durian"],
+    correct: 1,
+    explain: "Gambar itu ialah buah epal (Apple)."
+  },
+  {
+    text: "Pisang ialah buah yang berwarna ______.",
+    options: ["kuning", "biru", "hitam", "ungu"],
+    correct: 0,
+    explain: "Pisang berwarna kuning apabila masak."
+  },
+  {
+    text: "Apakah bahasa Melayu bagi มะม่วง?",
+    options: ["Epal", "Mangga", "Betik", "Limau"],
+    correct: 1,
+    explain: "มะม่วง dalam bahasa Melayu ialah Mangga (Mango)."
+  },
+  {
+    text: "Durian mempunyai bau yang ______.",
+    options: ["wangi", "kuat", "masin", "pahit"],
+    correct: 1,
+    explain: "Durian terkenal dengan bau yang kuat dan tajam."
+  },
+  {
+    text: "Apakah bahasa Melayu bagi แตงโม?",
+    options: ["Tembikai", "Rambutan", "Pisang", "Limau"],
+    correct: 0,
+    explain: "แตงโม dalam bahasa Melayu ialah Tembikai (Watermelon)."
+  },
+  {
+    text: "Buah yang mempunyai rambut di kulitnya ialah ______.",
+    options: ["Epal", "Rambutan", "Mangga", "Betik"],
+    correct: 1,
+    explain: "Rambutan mempunyai kulit berambut — itulah asal namanya."
+  },
+  {
+    text: "Apakah bahasa Melayu bagi ส้ม?",
+    options: ["Durian", "Limau", "Pisang", "Tembikai"],
+    correct: 1,
+    explain: "ส้ม dalam bahasa Melayu ialah Limau (Orange)."
+  },
+  {
+    text: "Saya suka ______.",
+    options: ["mangga", "meja", "buku", "pensel"],
+    correct: 0,
+    explain: "Mangga ialah satu-satunya buah dalam senarai ini — meja, buku dan pensel bukan buah."
+  },
+  {
+    text: "Yang manakah bukan buah?",
+    options: ["Pisang", "Epal", "Mangga", "Kerusi"],
+    correct: 3,
+    explain: "Kerusi ialah perabot, bukan buah."
+  },
+  {
+    text: "Pilih kumpulan buah-buahan yang betul.",
+    options: [
+      "Pisang, mangga, durian",
+      "Buku, pensel, pemadam",
+      "Ayam, ikan, kucing",
+      "Meja, kerusi, pintu"
+    ],
+    correct: 0,
+    explain: "Pisang, mangga dan durian semuanya buah-buahan."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+const log = [];
+
+const sentenceEl = document.getElementById('sentenceEl');
+const visualEl = document.getElementById('visualEl');
+const optionsEl = document.getElementById('optionsEl');
+const feedbackEl = document.getElementById('feedbackEl');
+const nextBtn = document.getElementById('nextBtn');
+const progressFill = document.getElementById('progressFill');
+const progressCount = document.getElementById('progressCount');
+const qNumBadge = document.getElementById('qNumBadge');
+const quizView = document.getElementById('quizView');
+const resultsView = document.getElementById('resultsView');
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[current];
+
+  visualEl.textContent = q.visual || '';
+  visualEl.style.display = q.visual ? 'block' : 'none';
+  sentenceEl.textContent = q.text;
+
+  qNumBadge.textContent = current + 1;
+  progressCount.textContent = `Soalan ${current + 1} / ${questions.length}`;
+  progressFill.style.width = `${(current / questions.length) * 100}%`;
+
+  optionsEl.innerHTML = '';
+  q.options.forEach((optText, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="letter">${LETTERS[i]}</span><span>${optText}</span>`;
+    btn.addEventListener('click', () => selectOption(i, btn));
+    optionsEl.appendChild(btn);
+  });
+
+  feedbackEl.className = 'feedback';
+  feedbackEl.innerHTML = '';
+  nextBtn.classList.remove('show');
+}
+
+function selectOption(i) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const isCorrect = i === q.correct;
+  if (isCorrect) score++;
+
+  [...optionsEl.children].forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === i) {
+      btn.classList.add(isCorrect ? 'correct-pick' : 'wrong-pick');
+    } else if (idx === q.correct) {
+      btn.classList.add('reveal-correct');
+    } else {
+      btn.classList.add('dim');
+    }
+  });
+
+  feedbackEl.className = `feedback show ${isCorrect ? 'tone-correct' : 'tone-wrong'}`;
+  feedbackEl.innerHTML = isCorrect
+    ? `🟢 <strong>Betul!</strong> ${q.explain}`
+    : `🔴 <strong>Belum tepat.</strong> Jawapan yang betul ialah <strong>${q.options[q.correct]}</strong>. ${q.explain}`;
+
+  log.push({
+    text: q.text,
+    chosen: q.options[i],
+    correctText: q.options[q.correct],
+    wasCorrect: isCorrect
+  });
+
+  nextBtn.classList.add('show');
+  nextBtn.textContent = current === questions.length - 1 ? "Lihat keputusan →" : "Soalan seterusnya →";
+}
+
+nextBtn.addEventListener('click', () => {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+});
+
+function showResults() {
+  progressFill.style.width = '100%';
+  quizView.style.display = 'none';
+  resultsView.style.display = 'block';
+
+  const perfect = score === questions.length;
+  const emoji = perfect ? '🎉' : (score >= questions.length * 0.6 ? '🌟' : '📖');
+  const title = perfect ? 'Tahniah! Semua jawapan betul!' : 'Latihan selesai!';
+  const sub = perfect
+    ? 'Anda mengenali nama dan ciri-ciri buah-buahan dengan tepat untuk semua soalan.'
+    : 'Semak semula soalan yang tersilap di bawah untuk mengukuhkan kefahaman anda.';
+
+  const reviewHtml = log.map((item, i) => `
+    <div class="review-item">
+      <span class="mark">${item.wasCorrect ? '🟢' : '🔴'}</span>
+      <span>
+        <strong>${i + 1}.</strong> ${item.text}<br>
+        ${item.wasCorrect
+          ? `Jawapan anda: <strong>${item.chosen}</strong>`
+          : `Jawapan anda: <strong>${item.chosen}</strong> — Jawapan betul: <strong>${item.correctText}</strong>`
+        }
+      </span>
+    </div>
+  `).join('');
+
+  resultsView.innerHTML = `
+    <div class="results">
+      <div class="big-emoji">${emoji}</div>
+      <h2>${title}</h2>
+      <p class="score-line">${sub}<br>Skor anda: <b>${score} / ${questions.length}</b></p>
+      <div class="review-list">${reviewHtml}</div>
+      <button class="restart-btn" id="restartBtn">Cuba lagi dari awal</button>
+    </div>
+  `;
+
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    current = 0; score = 0; log.length = 0;
+    resultsView.style.display = 'none';
+    quizView.style.display = 'block';
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+
+</body>
+</html>
